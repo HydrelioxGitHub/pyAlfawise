@@ -1,0 +1,15 @@
+language: python
+python:
+- '3.3'
+- '3.4'
+- '3.5'
+- '3.6'
+install: pip install -r requirements.txt
+deploy:
+  provider: pypi
+  user: hydreliox
+  password:
+    secure: 3d4Wn2e9UL5ryuFYh8JxZMSaxc2pHPWt9W5QUv18yW/bNLETLOu8YM3gc0jDXfFpJK8xRNi0ML3Fq2vsSsTywP3iKZ2HQUNte0txqoKJmqdHYWZa3jp26dGiLQTAQkErenxCBMGDuO2+Elxs8yu13A4R7G+KL6ZVfwAg+WUBqf86+TliWOn+GdrHbgM5mmmPTwRzBsY8Z1ePKhaK4DQ7B3qhyLSAvAOx5vgL8k+PaFKH4+bAoNrXDMrMbgIUJVjIflQDNLP9Ho+w23+TiwWXEQ+caxyxxU6tSVQfsvSktf+RRqkHHMZeIhr4WyBJO8PI8ZHSyARHwy20ILVcJPmInnPeduZEaqQDCM2Tf2CLo6mTzie1tEsSuhD46MzSQC0DZHrL87D30Kh1oqXkmkE0erCNGpqb2MHxO1y4twTXJAGWjo/fvZaFtjWo9YfTWUGAgp1M7VoKYDQeKJvvyYI8DaWfRAsRSR44xUOlEVyz24RDnobh+6HUrJpkm0DcvXreL4EfqVp7MIu/ZMKX6eZktR4+C1hc4CiilMQK11FXaYFFRt8d5jy3JMMTg3z9AQrZTGARZ54e5hIhhub6KoJGGhT5abwEUN5h30seZvvKKPIl1yVG9IOtjDHwHi6OlZauZjjx2/G2HL2+aHkxTVYXoIA/Xq6CdNQzwD/nS9fYxWo=
+  on:
+    tags: true
+    branch: master
