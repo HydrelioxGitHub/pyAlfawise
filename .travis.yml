@@ -13,5 +13,6 @@ deploy:
   on:
     tags: true
     branch: master
+    python: '3.5'
 script:
   - python pyAlfawise/__init__.py
