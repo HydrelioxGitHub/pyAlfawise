@@ -1,4 +1,9 @@
 from voluptuous import Schema
+import os
+
+class AlfawiseError(Exception):
+    def __init__(self, arg):
+        Exception.__init__(self, "Alfawaise device can't be reached using this ip :" + arg)
 
 
 class Alfawise:
@@ -42,6 +47,10 @@ class Alfawise:
         self.property = dict.fromkeys([self.OPTION_POWER, self.OPTION_COLOR,
                                        self.OPTION_EFFECT, self.OPTION_TIMER,
                                        self.OPTION_SPEED])
+        # Test if device is available by pinging it
+        if not self._is_device_reachable(ip):
+            raise AlfawiseError(ip)
+
 
     def is_fan_on(self):
         return self.property[self.OPTION_SPEED] != self.OFF
@@ -211,3 +220,11 @@ class Alfawise:
                         'UTF-8')
         sock.sendto(command, (self.ip, 10002))
         sock.close()
+
+    def _is_device_reachable(self, hostname):
+        response = os.system("ping -c 1 " + hostname)
+        # and then check the response...
+        if response == 0:
+            return True
+        else:
+            return False
