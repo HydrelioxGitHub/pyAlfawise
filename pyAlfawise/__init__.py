@@ -134,7 +134,7 @@ class Alfawise:
             This method is used to switch on the fan (mist)
         """
         # if no speed is provided, low speed will be send
-        if (speed is None):
+        if speed is None:
             self.property[self.OPTION_SPEED] = self.LOW
         else:
             self.property[self.OPTION_SPEED] = speed
@@ -201,8 +201,7 @@ class Alfawise:
         sock.sendto(command, (self.ip, 10002))
         try:
             received_bytes, peer = sock.recvfrom(buffer_size)
-            if self.debug:
-                print("Read : %s from %s:%u" % (received_bytes.decode('utf8'), peer[0], peer[1]))
+            logging.debug("Read : %s from %s:%u" % (received_bytes.decode('utf8'), peer[0], peer[1]))
             sock.close()
         except socket.timeout:
             return None
@@ -217,13 +216,11 @@ class Alfawise:
         command = bytes(
             '{"command":"' + command_type + '", "' + command_name + '":"' + command_value + '","deviceid":"' + self.mac + '","modelid":"SJA-07-01S","phoneid":"020000000000","userid":""}',
             'UTF-8')
-        if self.debug:
-            print("Sent : %s" % command)
+        logging.debug("Sent : %s" % command)
         sock.sendto(command, (self.ip, 10002))
         try:
             received_bytes, peer = sock.recvfrom(buffer_size)
-            if self.debug:
-                print("Response : %s from %s:%u" % (received_bytes.decode('utf8'), peer[0], peer[1]))
+            logging.debug("Response : %s from %s:%u" % (received_bytes.decode('utf8'), peer[0], peer[1]))
             sock.close()
         except socket.timeout:
             raise AlfawiseError(self.ip)
