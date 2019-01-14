@@ -1,6 +1,7 @@
 from voluptuous import Schema
 import os
 
+
 class AlfawiseError(Exception):
     def __init__(self, arg):
         Exception.__init__(self, "Alfawaise device can't be reached using this ip :" + arg)
@@ -50,7 +51,6 @@ class Alfawise:
         # Test if device is available by pinging it
         if not self._is_device_reachable(ip):
             raise AlfawiseError(ip)
-
 
     def is_fan_on(self):
         return self.property[self.OPTION_SPEED] != self.OFF
@@ -192,26 +192,20 @@ class Alfawise:
             self.turn_light_on()
 
     def read(self):
-        bufferSize = 1024
+        buffer_size = 1024
         import socket
-        import select
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        command = bytes('{"command":"comm100","password":"1234","deviceid":' + self.mac + ',"modelid":"sj07","phoneid":"020000000000","userid":""}',
-                        'UTF-8')
+        command = bytes('{"command":"comm100","password":"1234","deviceid":"' + self.mac + '","modelid":"sj07","phoneid":"020000000000","userid":""}',
+                         'UTF-8')
         sock.sendto(command, (self.ip, 10002))
-        command = bytes('{"command":"comm1003","deviceid":""' + self.mac + '","modelid":"sj07","phoneid":"020000000000","userid":""}',
-                        'UTF-8')
-        sock.sendto(command, (self.ip, 10002))
-        result = select.select([sock], [], [])
-        msg = result[0][0].recv(bufferSize)
-        print(msg)
+        received_bytes, peer = sock.recvfrom(buffer_size)
+        print("Received %s from %s:%u" % (received_bytes.decode('utf8'), peer[0], peer[1]))
         sock.close()
 
-
     def _send_command(self, command_type, command_name, command_value):
-        bufferSize = 1024
+        buffer_size = 1024
         import socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
@@ -219,6 +213,8 @@ class Alfawise:
         command = bytes('{"command":"' + command_type + '", "' + command_name + '":"' + command_value + '","deviceid":"' + self.mac + '","modelid":"sj07","phoneid":"020000000000","userid":""}',
                         'UTF-8')
         sock.sendto(command, (self.ip, 10002))
+        received_bytes, peer = sock.recvfrom(buffer_size)
+        print("Received %s from %s:%u" % (received_bytes.decode('utf8'), peer[0], peer[1]))
         sock.close()
 
     def _is_device_reachable(self, hostname):
