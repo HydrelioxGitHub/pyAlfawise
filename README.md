@@ -28,7 +28,7 @@ PyAlfawise
 ```
 >>> import pyAlfawise
 >>> device = pyAlfawise.Alfawise("mac address without :", "ip address")
->>> device.turn_on(255,0,0)
+>>> device.turn_on()
 ```
 
 ### <i class="icon-plus"></i>What can I add ?
