@@ -1,5 +1,7 @@
 from voluptuous import Schema
-import os
+import socket
+import json
+import logging
 
 
 class AlfawiseError(Exception):
@@ -39,18 +41,18 @@ class Alfawise:
     OPTION_TIMER = 'countdown'
     OPTION_EFFECT = 'l_mode'
     OPTION_COLOR = 'l_color'
+    OPTION_BRIGHTNESS = 'leave'
 
-    def __init__(self, mac, ip='255.255.255.255'):
+    def __init__(self, mac, ip='255.255.255.255', debug=False):
         self.ip = ip
         self.mac = mac
         self.port = 10002
         self.saved_color = "FFFFFF"
+        self.debug = True
         self.property = dict.fromkeys([self.OPTION_POWER, self.OPTION_COLOR,
                                        self.OPTION_EFFECT, self.OPTION_TIMER,
                                        self.OPTION_SPEED])
-        # Test if device is available by pinging it
-        if not self._is_device_reachable(ip):
-            raise AlfawiseError(ip)
+        self._update()
 
     def is_fan_on(self):
         return self.property[self.OPTION_SPEED] != self.OFF
@@ -59,10 +61,10 @@ class Alfawise:
         return self.property[self.OPTION_SPEED] == self.OFF
 
     def is_light_on(self):
-        return self.property[self.OPTION_COLOR] is not None
+        return self.property[self.OPTION_COLOR] is not '000000'
 
     def is_light_off(self):
-        return self.property[self.OPTION_COLOR] is None
+        return self.property[self.OPTION_COLOR] is '000000'
 
     def is_on(self):
         return self.property[self.OPTION_POWER] == self.POWER_ON
@@ -94,29 +96,27 @@ class Alfawise:
         # Send command
         self._send_command(self.COLOR, self.OPTION_COLOR, hexvalue)
         # Update property
-        self.property[self.OPTION_COLOR] = hexvalue
         self.saved_color = hexvalue
+        self.property[self.OPTION_COLOR] = hexvalue
 
     def turn_on(self):
         """
             This method is used to switch on the device
         """
         # Check state
-        if 1:
+        if self.is_off():
             # Send command
             self._send_command(self.POWER, self.OPTION_POWER, self.POWER_ON)
-            # Update property
-            self.property[self.OPTION_POWER] = self.POWER_ON
+            self.property[self.OPTION_POWER]=self.POWER_ON
 
     def turn_off(self):
         """
             This method is used to switch off the device
         """
         # Check state
-        if 1:
+        if self.is_on():
             # Send command
             self._send_command(self.POWER, self.OPTION_POWER, self.POWER_OFF)
-            # Update property
             self.property[self.OPTION_POWER] = self.POWER_OFF
 
     def toggle(self):
@@ -133,7 +133,7 @@ class Alfawise:
         """
             This method is used to switch on the fan (mist)
         """
-        # Update property
+        # if no speed is provided, low speed will be send
         if (speed is None):
             self.property[self.OPTION_SPEED] = self.LOW
         else:
@@ -147,7 +147,6 @@ class Alfawise:
         """
         # Send command
         self._send_command(self.SPEED, self.OPTION_SPEED, self.OFF)
-        # Update property
         self.property[self.OPTION_SPEED] = self.OFF
 
     def toggle_fan(self):
@@ -164,11 +163,11 @@ class Alfawise:
         """
             This method is used to switch on the light
         """
-        # Update property
+        # if no speed is provided, the last saved color will be send
         if (color is None):
             self.property[self.OPTION_COLOR] = self.saved_color
         else:
-            self.property[self.OPTION_SPEED] = color
+            self.property[self.OPTION_COLOR] = color
         # Send command
         self._send_command(self.COLOR, self.OPTION_COLOR, self.property[self.OPTION_COLOR])
 
@@ -178,14 +177,12 @@ class Alfawise:
         """
         # Send command
         self._send_command(self.COLOR, self.OPTION_COLOR, "000000")
-        # Update property
-        self.property[self.OPTION_COLOR] = None
+        self.property[self.OPTION_COLOR] = "000000"
 
     def toggle_light(self):
         """
             This method is used to toggle the light
         """
-        # Update property
         if self.is_light_on():
             self.turn_light_off()
         elif self.is_light_off():
@@ -193,34 +190,55 @@ class Alfawise:
 
     def read(self):
         buffer_size = 1024
-        import socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        command = bytes('{"command":"comm100","password":"1234","deviceid":"' + self.mac + '","modelid":"sj07","phoneid":"020000000000","userid":""}',
-                         'UTF-8')
+        sock.settimeout(2)
+        command = bytes(
+            '{"command":"comm100","password":"1234","deviceid":"' + self.mac + '","modelid":"SJA-07-01S",'
+                                                                               '"phoneid":"020000000000","userid":""}',
+            'UTF-8')
         sock.sendto(command, (self.ip, 10002))
-        received_bytes, peer = sock.recvfrom(buffer_size)
-        print("Received %s from %s:%u" % (received_bytes.decode('utf8'), peer[0], peer[1]))
-        sock.close()
+        try:
+            received_bytes, peer = sock.recvfrom(buffer_size)
+            if self.debug:
+                print("Read : %s from %s:%u" % (received_bytes.decode('utf8'), peer[0], peer[1]))
+            sock.close()
+        except socket.timeout:
+            return None
+        return json.loads(received_bytes.decode('utf8'))
 
     def _send_command(self, command_type, command_name, command_value):
         buffer_size = 1024
-        import socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        command = bytes('{"command":"' + command_type + '", "' + command_name + '":"' + command_value + '","deviceid":"' + self.mac + '","modelid":"sj07","phoneid":"020000000000","userid":""}',
-                        'UTF-8')
+        sock.settimeout(2)
+        command = bytes(
+            '{"command":"' + command_type + '", "' + command_name + '":"' + command_value + '","deviceid":"' + self.mac + '","modelid":"SJA-07-01S","phoneid":"020000000000","userid":""}',
+            'UTF-8')
+        if self.debug:
+            print("Sent : %s" % command)
         sock.sendto(command, (self.ip, 10002))
-        received_bytes, peer = sock.recvfrom(buffer_size)
-        print("Received %s from %s:%u" % (received_bytes.decode('utf8'), peer[0], peer[1]))
-        sock.close()
+        try:
+            received_bytes, peer = sock.recvfrom(buffer_size)
+            if self.debug:
+                print("Response : %s from %s:%u" % (received_bytes.decode('utf8'), peer[0], peer[1]))
+            sock.close()
+        except socket.timeout:
+            raise AlfawiseError(self.ip)
 
-    def _is_device_reachable(self, hostname):
-        response = os.system("ping -c 1 " + hostname)
-        # and then check the response...
-        if response == 0:
-            return True
+    def _update(self, already_polled=False):
+        """
+            Update properties from reading the device and parsing response
+        """
+        if already_polled is not False:
+            data = already_polled
         else:
-            return False
+            data = self.read()
+
+        if data is None:
+            raise AlfawiseError(self.ip)
+
+        for key in self.property:
+            self.property[key] = (data[key])
