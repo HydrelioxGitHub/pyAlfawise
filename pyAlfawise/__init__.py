@@ -60,10 +60,10 @@ class Alfawise:
         return self.property[self.OPTION_SPEED] == self.OFF
 
     def is_light_on(self):
-        return self.property[self.OPTION_COLOR] is not '000000'
+        return self.property[self.OPTION_COLOR] != '000000'
 
     def is_light_off(self):
-        return self.property[self.OPTION_COLOR] is '000000'
+        return self.property[self.OPTION_COLOR] == '000000'
 
     def is_on(self):
         return self.property[self.OPTION_POWER] == self.POWER_ON
