@@ -15,26 +15,26 @@ class Alfawise:
 
     """
 
-    POWER = 'comm6'
+    COMMAND_POWER = 'comm6'
     POWER_OFF = '0'
     POWER_ON = '1'
 
-    SPEED = 'comm103'
+    COMMAND_SPEED = 'comm103'
     OFF = '0'
     LOW = '1'
     HIGH = '2'
 
-    TIMER = 'comm102'
+    COMMAND_TIMER = 'comm102'
     ONE_HOUR = '1'
     THREE_HOURS = '3'
     SIX_HOURS = '6'
 
-    EFFECT = 'comm104'
+    COMMAND_EFFECT = 'comm104'
     GRADIENT = '2'
     FLASH = '3'
     QUIET = '1'
 
-    COLOR = 'comm101'
+    COMMAND_COLOR = 'comm101'
 
     OPTION_POWER = 'sa_ctrl'
     OPTION_SPEED = 'h_rank'
@@ -43,12 +43,11 @@ class Alfawise:
     OPTION_COLOR = 'l_color'
     OPTION_BRIGHTNESS = 'leave'
 
-    def __init__(self, mac, ip='255.255.255.255', debug=False):
+    def __init__(self, mac, ip='255.255.255.255'):
         self.ip = ip
         self.mac = mac
         self.port = 10002
         self.saved_color = "FFFFFF"
-        self.debug = True
         self.property = dict.fromkeys([self.OPTION_POWER, self.OPTION_COLOR,
                                        self.OPTION_EFFECT, self.OPTION_TIMER,
                                        self.OPTION_SPEED])
@@ -94,19 +93,22 @@ class Alfawise:
         schema = Schema({'hexvalue': str})
         schema({'hexvalue': hexvalue})
         # Send command
-        self._send_command(self.COLOR, self.OPTION_COLOR, hexvalue)
+        self._send_command(self.COMMAND_COLOR, self.OPTION_COLOR, hexvalue)
         # Update property
         self.saved_color = hexvalue
         self.property[self.OPTION_COLOR] = hexvalue
 
     def turn_on(self):
         """
-            This method is used to switch on the device
+        This method is used to switch on the device
+        BUG : when you turn off and on the device, it starts with default
+        color and fan speed. The data read from the device still the same so there no match between real state and
+        data provided.
         """
         # Check state
         if self.is_off():
             # Send command
-            self._send_command(self.POWER, self.OPTION_POWER, self.POWER_ON)
+            self._send_command(self.COMMAND_POWER, self.OPTION_POWER, self.POWER_ON)
             self.property[self.OPTION_POWER]=self.POWER_ON
 
     def turn_off(self):
@@ -116,7 +118,7 @@ class Alfawise:
         # Check state
         if self.is_on():
             # Send command
-            self._send_command(self.POWER, self.OPTION_POWER, self.POWER_OFF)
+            self._send_command(self.COMMAND_POWER, self.OPTION_POWER, self.POWER_OFF)
             self.property[self.OPTION_POWER] = self.POWER_OFF
 
     def toggle(self):
@@ -139,14 +141,14 @@ class Alfawise:
         else:
             self.property[self.OPTION_SPEED] = speed
         # Send command
-        self._send_command(self.SPEED, self.OPTION_SPEED, self.property[self.OPTION_SPEED])
+        self._send_command(self.COMMAND_SPEED, self.OPTION_SPEED, self.property[self.OPTION_SPEED])
 
     def turn_fan_off(self):
         """
             This method is used to switch off the fan (mist)
         """
         # Send command
-        self._send_command(self.SPEED, self.OPTION_SPEED, self.OFF)
+        self._send_command(self.COMMAND_SPEED, self.OPTION_SPEED, self.OFF)
         self.property[self.OPTION_SPEED] = self.OFF
 
     def toggle_fan(self):
@@ -169,14 +171,14 @@ class Alfawise:
         else:
             self.property[self.OPTION_COLOR] = color
         # Send command
-        self._send_command(self.COLOR, self.OPTION_COLOR, self.property[self.OPTION_COLOR])
+        self._send_command(self.COMMAND_COLOR, self.OPTION_COLOR, self.property[self.OPTION_COLOR])
 
     def turn_light_off(self):
         """
             This method is used to switch off the light
         """
         # Send command
-        self._send_command(self.COLOR, self.OPTION_COLOR, "000000")
+        self._send_command(self.COMMAND_COLOR, self.OPTION_COLOR, "000000")
         self.property[self.OPTION_COLOR] = "000000"
 
     def toggle_light(self):
