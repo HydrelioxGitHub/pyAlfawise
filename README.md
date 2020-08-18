@@ -1,4 +1,10 @@
 PyAlfawise
+
+[![Build Status](https://travis-ci.org/HydrelioxGitHub/pyAlfawise.svg?branch=master)](https://travis-ci.org/HydrelioxGitHub/pyAlfawise)
+[![GitHub release](https://img.shields.io/github/release/HydrelioxGitHub/pyAlfawise.svg)](https://github.com/HydrelioxGitHub/pyAlfawise/releases/)
+[![PyPI version pyAlfawise](https://badge.fury.io/py/pyAlfawise.svg)](https://pypi.org/project/pyAlfawise/)
+![GitHub](https://img.shields.io/github/license/HydrelioxGitHub/pyAlfawise)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=S96KGQYXM3QJG&currency_code=EUR&source=url)
 ===================
 
 ![AlfaWise Humidificateur](http://sarakha63-domotique.fr/wp-content/uploads/2018/02/diffuseur.jpg)
@@ -36,3 +42,5 @@ PyAlfawise
   - PR are welcome
   - Advices on library structure are welcome too, this is one of my first python library and I'm still a noob on Python code
   - If you want to contact me : <i class="icon-twitter"></i> @hydreliox on Twitter
+
+[![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
