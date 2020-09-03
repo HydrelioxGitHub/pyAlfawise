@@ -2,11 +2,12 @@ from voluptuous import Schema
 import socket
 import json
 import logging
+import netaddr
 
 
 class AlfawiseError(Exception):
     def __init__(self, arg):
-        Exception.__init__(self, "Alfawaise device can't be reached using this ip :" + arg)
+        Exception.__init__(self, "Alfawaise device can't be reached using this ip :" + str(arg))
 
 
 class Alfawise:
@@ -44,13 +45,14 @@ class Alfawise:
     OPTION_BRIGHTNESS = 'leave'
 
     def __init__(self, mac, ip='255.255.255.255'):
-        self.ip = ip
-        self.mac = mac
+        self.ip = netaddr.IPAddress(ip)
+        self.mac = netaddr.EUI(mac)
         self.port = 10002
         self.saved_color = "FFFFFF"
         self.property = dict.fromkeys([self.OPTION_POWER, self.OPTION_COLOR,
                                        self.OPTION_EFFECT, self.OPTION_TIMER,
                                        self.OPTION_SPEED])
+        self._formatted_mac = self._format_mac(mac)
         self._update()
 
     def is_fan_on(self):
@@ -109,7 +111,7 @@ class Alfawise:
         if self.is_off():
             # Send command
             self._send_command(self.COMMAND_POWER, self.OPTION_POWER, self.POWER_ON)
-            self.property[self.OPTION_POWER]=self.POWER_ON
+            self.property[self.OPTION_POWER] = self.POWER_ON
 
     def turn_off(self):
         """
@@ -196,11 +198,12 @@ class Alfawise:
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         sock.settimeout(2)
+
         command = bytes(
-            '{"command":"comm100","password":"1234","deviceid":"' + self.mac + '","modelid":"SJA-07-01S",'
-                                                                               '"phoneid":"020000000000","userid":""}',
+            '{"command":"comm100","password":"1234","deviceid":"' + self._formatted_mac + '","modelid":"SJA-07-01S",'
+                            '"phoneid":"020000000000","userid":""}',
             'UTF-8')
-        sock.sendto(command, (self.ip, 10002))
+        sock.sendto(command, (str(self.ip), 10002))
         try:
             received_bytes, peer = sock.recvfrom(buffer_size)
             logging.debug("Read : %s from %s:%u" % (received_bytes.decode('utf8'), peer[0], peer[1]))
@@ -216,10 +219,10 @@ class Alfawise:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         sock.settimeout(2)
         command = bytes(
-            '{"command":"' + command_type + '", "' + command_name + '":"' + command_value + '","deviceid":"' + self.mac + '","modelid":"SJA-07-01S","phoneid":"020000000000","userid":""}',
+            '{"command":"' + command_type + '", "' + command_name + '":"' + command_value + '","deviceid":"' + self._formatted_mac + '","modelid":"SJA-07-01S","phoneid":"020000000000","userid":""}',
             'UTF-8')
         logging.debug("Sent : %s" % command)
-        sock.sendto(command, (self.ip, 10002))
+        sock.sendto(command, (str(self.ip), 10002))
         try:
             received_bytes, peer = sock.recvfrom(buffer_size)
             logging.debug("Response : %s from %s:%u" % (received_bytes.decode('utf8'), peer[0], peer[1]))
@@ -241,3 +244,8 @@ class Alfawise:
 
         for key in self.property:
             self.property[key] = (data[key])
+
+    def _format_mac(self, mac_address):
+        converted_mac = str(mac_address).replace("-", "")
+        logging.debug("Converted mac : %s" % (converted_mac))
+        return converted_mac
