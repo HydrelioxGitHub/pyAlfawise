@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='pyAlfawise',
     packages=['pyAlfawise'],  # this must be the same as the name above
-    install_requires=['voluptuous'],
+    install_requires=['voluptuous', 'netaddr'],
     version='0.7-beta',
     description='a simple python3 library for the Alfawise Humidifier',
     author='Hydreliox',
