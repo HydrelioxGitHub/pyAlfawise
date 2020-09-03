@@ -21,9 +21,10 @@ PyAlfawise
 ### <i class="icon-check"></i>TODO
 
 - [ ] Add test coverage
-- [ ] Add the library to Pypi
+- [x] Add the library to Pypi
 - [ ] Correct some bugs (see TODO in code)
-- [ ] Add possibility to ask the device back for its current state (reverse engineering needed)
+- [x] Add possibility to ask the device back for its current state (reverse engineering needed)
+- [ ] Still some bug to fix with reading device state as the answer does not reflect the real state (bug ?)
 - [ ] .... and lots of things !
  
 ### <i class="icon-cog"></i> How-To
@@ -33,7 +34,7 @@ PyAlfawise
 4. Open your favorite python3 console  
 ```
 >>> import pyAlfawise
->>> device = pyAlfawise.Alfawise("mac address without :", "ip address")
+>>> device = pyAlfawise.Alfawise("mac address", "ip address")
 >>> device.turn_on()
 ```
 
